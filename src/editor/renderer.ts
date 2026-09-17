@@ -1,0 +1,17 @@
+import type { TimestampConfig } from './types'
+export const getActiveLines = (config: TimestampConfig) => config.fields.filter((field) => field.enabled && field.value.trim())
+export function renderTimestamp(ctx: CanvasRenderingContext2D, imageWidth: number, imageHeight: number, config: TimestampConfig) {
+  const lines = getActiveLines(config); if (!lines.length) return
+  const scale = config.style.autoScale ? imageWidth / 1920 : 1
+  const fontSize = Math.max(12, config.style.fontSize * scale)
+  const lineHeight = fontSize * config.style.lineSpacing
+  const marginX = imageWidth * 0.008
+  const marginY = imageHeight * 0.01
+  ctx.save(); ctx.font = `${config.style.weight} ${fontSize}px ${config.style.fontFamily}`; ctx.textBaseline = 'top'; ctx.textAlign = config.style.align; ctx.globalAlpha = config.style.opacity; ctx.lineJoin = 'round'
+  const totalHeight = fontSize + lineHeight * Math.max(0, lines.length - 1)
+  const anchorX = config.position.includes('right') ? imageWidth - marginX : config.position.includes('center') || config.position === 'center' ? imageWidth / 2 : config.position === 'custom' ? imageWidth * (config.customX / 100) : marginX
+  const anchorY = config.position.includes('bottom') ? imageHeight - marginY - totalHeight : config.position.includes('top') ? marginY : config.position === 'center' ? (imageHeight - totalHeight) / 2 : config.position === 'custom' ? imageHeight * (config.customY / 100) : marginY
+  lines.forEach((line, index) => { const y = anchorY + index * lineHeight; const spacing = config.style.letterSpacing * scale; if (config.style.shadow) { ctx.shadowColor = 'rgba(0, 0, 0, .76)'; ctx.shadowBlur = Math.max(0.2, 0.75 * scale); ctx.shadowOffsetX = 0.7 * scale; ctx.shadowOffsetY = 0.7 * scale } if (config.style.strokeWidth > 0) { ctx.strokeStyle = config.style.strokeColor === '#000000' ? 'rgba(0, 0, 0, .76)' : config.style.strokeColor; ctx.lineWidth = Math.max(0.2, config.style.strokeWidth * scale); drawText(ctx, line.value, anchorX, y, spacing, true) } ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.fillStyle = config.style.color; ctx.strokeStyle = config.style.color; ctx.lineWidth = Math.max(0.2, 0.28 * scale); drawText(ctx, line.value, anchorX, y, spacing, true); drawText(ctx, line.value, anchorX, y, spacing, false) }); ctx.restore()
+}
+function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, spacing: number, stroke: boolean) { if (!spacing) { stroke ? ctx.strokeText(text, x, y) : ctx.fillText(text, x, y); return }; const chars = [...text]; const width = chars.reduce((total, char) => total + ctx.measureText(char).width, 0) + spacing * Math.max(0, chars.length - 1); let cursor = x - (ctx.textAlign === 'center' ? width / 2 : ctx.textAlign === 'right' ? width : 0); chars.forEach((char) => { stroke ? ctx.strokeText(char, cursor, y) : ctx.fillText(char, cursor, y); cursor += ctx.measureText(char).width + spacing }) }
+export function drawImageWithTimestamp(ctx: CanvasRenderingContext2D, image: CanvasImageSource, width: number, height: number, config: TimestampConfig) { ctx.clearRect(0, 0, width, height); ctx.drawImage(image, 0, 0, width, height); renderTimestamp(ctx, width, height, config) }
