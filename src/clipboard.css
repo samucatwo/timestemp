@@ -1,0 +1,21 @@
+.drop-zone::after {
+  content: 'Ctrl+V / Cmd+V para colar uma imagem';
+  color: #89918e;
+  font: 10px 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.image-load-error {
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 11px 15px;
+  border: 1px solid #58615d;
+  background: #171b1c;
+  color: #edf0eb;
+  font: 12px 'DM Mono', monospace;
+}
